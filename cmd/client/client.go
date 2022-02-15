@@ -20,7 +20,7 @@ func main() {
 	defer connection.Close()
 	client := pb.NewUserServiceClient(connection)
 
-	addUserVerbose(client)
+	AddUsers(client)
 	//for i := 0; i < 10000; i++ {
 	//	AddUser(client)
 	//	fmt.Println(i)
@@ -67,4 +67,39 @@ func addUserVerbose(client pb.UserServiceClient) {
 		}
 		fmt.Println("Status:", stream.Status)
 	}
+}
+
+func AddUsers(client pb.UserServiceClient) {
+	var reqs []*pb.User
+
+	reqs = append(reqs, &pb.User{
+		Id:    "0",
+		Name:  "João",
+		Email: "j@j.com",
+	}, &pb.User{
+		Id:    "1",
+		Name:  "Amanda",
+		Email: "amanda@j.com",
+	}, &pb.User{
+		Id:    "2",
+		Name:  "Wesley",
+		Email: "wesley@j.com",
+	})
+	stream, err := client.AddUsers(context.Background())
+
+	if err != nil {
+		log.Fatalf("Could not creating request: %v\n", err)
+	}
+
+	for _, req := range reqs {
+		stream.Send(req)
+		time.Sleep(time.Second * 3)
+	}
+	resp, err := stream.CloseAndRecv()
+
+	if err != nil {
+		log.Fatalf("Could not receiving stream : %v\n", err)
+	}
+
+	fmt.Println(resp)
 }
